@@ -13,8 +13,18 @@
   "content_scripts": [
     {
       "run_at": "document_idle",
-      "js": ["scripts/content.js"],
+      "js": ["scripts/panel.js", "scripts/iranketab.js", "scripts/content.js"],
       "matches": ["https://www.goodreads.com/book/show/*"]
     }
-  ]
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["scripts/*.js"],
+      "matches": ["https://www.goodreads.com/*"]
+    }
+  ],
+  "host_permissions": ["https://iranketab.ir/*", "https://www.iranketab.ir/*"],
+  "background": {
+    "service_worker": "scripts/background.js"
+  }
 }
