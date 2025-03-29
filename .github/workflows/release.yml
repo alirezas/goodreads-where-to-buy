@@ -1,0 +1,69 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - "v*" # Push events to tags matching v*, i.e. v1.0, v20.15.10
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci || npm install
+
+      - name: Set up private key from secrets
+        run: |
+          mkdir -p keys
+          echo "${{ secrets.EXTENSION_PRIVATE_KEY }}" > keys/private.pem
+          # If the secret is not set, generate a new key
+          if [ ! -s keys/private.pem ]; then
+            echo "No private key found in secrets, generating a new one..."
+            openssl genrsa -out keys/private.pem 2048
+          fi
+          chmod 600 keys/private.pem
+
+      - name: Install crx globally
+        run: npm install -g crx
+
+      - name: Extract version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+
+      - name: Check manifest version
+        run: |
+          MANIFEST_VERSION=$(grep -o '"version": "[^"]*"' manifest.json | cut -d'"' -f4)
+          echo "Manifest version: $MANIFEST_VERSION"
+          echo "Tag version: ${{ env.VERSION }}"
+          # Optional: Update manifest version to match tag if different
+          if [ "$MANIFEST_VERSION" != "${{ env.VERSION }}" ]; then
+            echo "Updating manifest version to ${{ env.VERSION }}"
+            sed -i "s/\"version\": \"$MANIFEST_VERSION\"/\"version\": \"${{ env.VERSION }}\"/g" manifest.json
+          fi
+
+      - name: Package extension
+        run: |
+          mkdir -p dist
+          crx pack . --zip-output "dist/goodreads-where-to-buy-${{ env.VERSION }}.zip" \
+                    --private-key keys/private.pem \
+                    --output "dist/goodreads-where-to-buy-${{ env.VERSION }}.crx"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release v${{ env.VERSION }}
+          draft: false
+          prerelease: false
+          files: |
+            dist/*.crx
+            dist/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

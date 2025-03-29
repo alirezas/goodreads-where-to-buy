@@ -1,0 +1,51 @@
+name: Dev Branch Test
+
+on:
+  push:
+    branches: [dev]
+    paths-ignore:
+      - "**.md"
+      - ".gitignore"
+  # Allow manual trigger from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci || npm install
+
+      - name: Generate test private key
+        run: |
+          mkdir -p keys
+          openssl genrsa -out keys/private.pem 2048
+
+      - name: Install crx globally
+        run: npm install -g crx
+
+      - name: Package extension
+        run: |
+          mkdir -p dist
+          VERSION=$(grep -o '"version": "[^"]*"' manifest.json | cut -d'"' -f4)
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          crx pack . --zip-output "dist/goodreads-where-to-buy-${VERSION}-dev-${TIMESTAMP}.zip" \
+                    --private-key keys/private.pem \
+                    --output "dist/goodreads-where-to-buy-${VERSION}-dev-${TIMESTAMP}.crx"
+          echo "Extension version: ${VERSION}-dev-${TIMESTAMP}"
+
+      - name: Upload dev artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dev-build
+          path: dist/*
+          retention-days: 3

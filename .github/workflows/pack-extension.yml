@@ -1,0 +1,74 @@
+name: Package Chrome Extension
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - ".gitignore"
+  # Allow manual trigger from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci || npm install
+
+      - name: Set up private key from secrets
+        run: |
+          mkdir -p keys
+          echo "${{ secrets.EXTENSION_PRIVATE_KEY }}" > keys/private.pem
+          # If the secret is not set, generate a new key
+          if [ ! -s keys/private.pem ]; then
+            echo "No private key found in secrets, generating a new one..."
+            openssl genrsa -out keys/private.pem 2048
+          fi
+          chmod 600 keys/private.pem
+
+      - name: Install crx globally
+        run: npm install -g crx
+
+      - name: Package extension
+        run: |
+          mkdir -p dist
+          VERSION=$(grep -o '"version": "[^"]*"' manifest.json | cut -d'"' -f4)
+          crx pack . --zip-output "dist/goodreads-where-to-buy-${VERSION}.zip" \
+                    --private-key keys/private.pem \
+                    --output "dist/goodreads-where-to-buy-${VERSION}.crx"
+          echo "Extension version: $VERSION"
+
+      - name: Upload CRX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: crx-file
+          path: dist/*.crx
+          retention-days: 7
+
+      - name: Upload ZIP artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: zip-file
+          path: dist/*.zip
+          retention-days: 7
+
+      # Optional: Create a release when tag is pushed
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/*.crx
+            dist/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
