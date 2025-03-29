@@ -1,0 +1,25 @@
+{
+  "name": "goodreads-where-to-buy",
+  "version": "1.0.0",
+  "description": "A Chrome extension that enhances your Goodreads experience by showing where you can purchase books from Iranian online bookstores directly on book pages.",
+  "main": "pack-extension.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "pack": "node pack-extension.js",
+    "pack:bash": "./pack-extension.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alirezas/goodreads-where-to-buy.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/alirezas/goodreads-where-to-buy/issues"
+  },
+  "homepage": "https://github.com/alirezas/goodreads-where-to-buy#readme",
+  "devDependencies": {
+    "crx": "^5.0.1"
+  }
+}
