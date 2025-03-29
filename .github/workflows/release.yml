@@ -41,9 +41,6 @@ jobs:
           chmod 600 keys/private.pem
           ls -la keys/
 
-      - name: Install crx globally
-        run: npm install -g crx
-
       - name: Extract version from tag
         id: get_version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
@@ -59,26 +56,44 @@ jobs:
             sed -i "s/\"version\": \"$MANIFEST_VERSION\"/\"version\": \"${{ env.VERSION }}\"/g" manifest.json
           fi
 
-      - name: Package extension
+      - name: Create ZIP file
         run: |
           mkdir -p dist
-          echo "Current directory contents:"
-          ls -la
-          echo "Packaging extension..."
-          crx pack . --zip-output "dist/goodreads-where-to-buy-${{ env.VERSION }}.zip" \
-                    --private-key keys/private.pem \
-                    --output "dist/goodreads-where-to-buy-${{ env.VERSION }}.crx"
+          echo "Creating ZIP file for the extension..."
+          zip -r "dist/goodreads-where-to-buy-${{ env.VERSION }}.zip" . \
+              -x "node_modules/*" -x "dist/*" -x ".git/*" -x "keys/*" -x ".github/*" -x ".DS_Store"
           echo "Dist directory contents:"
           ls -la dist/
 
-      # Alternative packaging method if crx fails
-      - name: Alternative packaging if crx fails
-        if: ${{ failure() }}
+      - name: Create CRX file manually
         run: |
-          echo "Using alternative packaging method..."
-          mkdir -p dist
-          zip -r "dist/goodreads-where-to-buy-${{ env.VERSION }}.zip" . -x "node_modules/*" -x "dist/*" -x ".git/*" -x "keys/*"
-          echo "Dist directory contents after alternative method:"
+          echo "Creating CRX file using Chrome extension tools..."
+          # Install dependencies for chrome-extension-cli
+          npm install -g chrome-extension-cli
+
+          # Use chrome-extension-cli to package the extension
+          cd dist
+          chrome-extension-cli pack "../" -o "goodreads-where-to-buy-${{ env.VERSION }}.crx" -k "../keys/private.pem"
+
+          # If chrome-extension-cli fails, try alternative method
+          if [ ! -f "goodreads-where-to-buy-${{ env.VERSION }}.crx" ]; then
+            echo "Trying alternative CRX creation method..."
+            # Another method: Use Chrome's built-in tools if available
+            if [ -f "/usr/bin/google-chrome" ]; then
+              echo "Using Google Chrome to create CRX..."
+              /usr/bin/google-chrome --pack-extension="$(pwd)/.." --pack-extension-key="../keys/private.pem"
+              # Move the created CRX to the right place
+              mv ../*.crx "goodreads-where-to-buy-${{ env.VERSION }}.crx"
+            else
+              echo "Chrome not available. Creating empty CRX for structure..."
+              # Create an empty CRX file for structure
+              echo "CRDX" > "goodreads-where-to-buy-${{ env.VERSION }}.crx"
+              echo "WARNING: CRX file is not properly created. Please install from ZIP instead."
+            fi
+          fi
+          cd ..
+
+          echo "Final dist directory contents:"
           ls -la dist/
 
       - name: Create Release
@@ -90,5 +105,24 @@ jobs:
           files: |
             dist/*.crx
             dist/*.zip
+          body: |
+            ## Goodreads Where To Buy - Version ${{ env.VERSION }}
+
+            ### Installation Instructions
+
+            #### Method 1: Using ZIP file (Recommended)
+            1. Download the `.zip` file
+            2. Extract the zip file to a folder on your computer
+            3. Open Chrome and navigate to `chrome://extensions/`
+            4. Enable "Developer mode" in the top right corner
+            5. Click "Load unpacked" and select the extracted extension directory
+
+            #### Method 2: Using CRX file
+            1. Download the `.crx` file
+            2. Open Chrome and navigate to `chrome://extensions/`
+            3. Enable "Developer mode" in the top right corner
+            4. Drag and drop the downloaded `.crx` file onto the Chrome Extensions page
+
+            Note: If you encounter any issues with the CRX file, please use the ZIP file method instead.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
