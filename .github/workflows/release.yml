@@ -65,35 +65,11 @@ jobs:
           echo "Dist directory contents:"
           ls -la dist/
 
-      - name: Create CRX file manually
+      - name: Create simple CRX placeholder
         run: |
-          echo "Creating CRX file using Chrome extension tools..."
-          # Install dependencies for chrome-extension-cli
-          npm install -g chrome-extension-cli
-
-          # Use chrome-extension-cli to package the extension
-          cd dist
-          chrome-extension-cli pack "../" -o "goodreads-where-to-buy-${{ env.VERSION }}.crx" -k "../keys/private.pem"
-
-          # If chrome-extension-cli fails, try alternative method
-          if [ ! -f "goodreads-where-to-buy-${{ env.VERSION }}.crx" ]; then
-            echo "Trying alternative CRX creation method..."
-            # Another method: Use Chrome's built-in tools if available
-            if [ -f "/usr/bin/google-chrome" ]; then
-              echo "Using Google Chrome to create CRX..."
-              /usr/bin/google-chrome --pack-extension="$(pwd)/.." --pack-extension-key="../keys/private.pem"
-              # Move the created CRX to the right place
-              mv ../*.crx "goodreads-where-to-buy-${{ env.VERSION }}.crx"
-            else
-              echo "Chrome not available. Creating empty CRX for structure..."
-              # Create an empty CRX file for structure
-              echo "CRDX" > "goodreads-where-to-buy-${{ env.VERSION }}.crx"
-              echo "WARNING: CRX file is not properly created. Please install from ZIP instead."
-            fi
-          fi
-          cd ..
-
-          echo "Final dist directory contents:"
+          echo "Creating a placeholder CRX file..."
+          echo -n "Cr24" > "dist/goodreads-where-to-buy-${{ env.VERSION }}.crx"
+          echo "Please use the ZIP file for installation. This CRX file is a placeholder." >> "dist/goodreads-where-to-buy-${{ env.VERSION }}.crx"
           ls -la dist/
 
       - name: Create Release
@@ -103,26 +79,18 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            dist/*.crx
             dist/*.zip
           body: |
             ## Goodreads Where To Buy - Version ${{ env.VERSION }}
 
             ### Installation Instructions
 
-            #### Method 1: Using ZIP file (Recommended)
             1. Download the `.zip` file
             2. Extract the zip file to a folder on your computer
             3. Open Chrome and navigate to `chrome://extensions/`
             4. Enable "Developer mode" in the top right corner
             5. Click "Load unpacked" and select the extracted extension directory
 
-            #### Method 2: Using CRX file
-            1. Download the `.crx` file
-            2. Open Chrome and navigate to `chrome://extensions/`
-            3. Enable "Developer mode" in the top right corner
-            4. Drag and drop the downloaded `.crx` file onto the Chrome Extensions page
-
-            Note: If you encounter any issues with the CRX file, please use the ZIP file method instead.
+            Note: CRX installation is not currently supported. Please use the ZIP file method.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

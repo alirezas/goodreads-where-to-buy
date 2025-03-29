@@ -20,19 +20,7 @@ A Chrome extension that enhances your Goodreads experience by showing where you 
 5. Enable "Developer mode" in the top right corner
 6. Click "Load unpacked" and select the extracted extension directory
 
-### Method 2: Using CRX File (Alternative)
-
-If a CRX file is available in the releases:
-
-1. Download the `.crx` file from the Releases page
-2. Open Chrome and navigate to `chrome://extensions/`
-3. Enable "Developer mode" in the top right corner
-4. Drag and drop the downloaded `.crx` file onto the Chrome Extensions page
-5. Click "Add extension" when prompted
-
-Note: Chrome might block CRX installations from outside the Chrome Web Store. If this happens, use Method 1 instead.
-
-### Method 3: Manual Installation from Source
+### Method 2: Manual Installation from Source
 
 1. Clone this repository or download the source code
 2. Open Chrome and navigate to `chrome://extensions/`
