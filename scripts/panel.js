@@ -1,8 +1,32 @@
+/**
+ * Main function to create the floating panel
+ * @returns {HTMLElement} The panel element
+ */
 function createPanel() {
-  // Create and append the floating panel
+  const floatingPanel = createPanelElement();
+  addStylesToDocument();
+  setupCloseButton(floatingPanel);
+  return floatingPanel;
+}
+
+/**
+ * Creates and appends the panel DOM element
+ * @returns {HTMLElement} The created panel element
+ */
+function createPanelElement() {
   const floatingPanel = document.createElement("div");
   floatingPanel.id = "goodreads-where-to-buy-panel";
-  floatingPanel.innerHTML = `
+  floatingPanel.innerHTML = createPanelHTML();
+  document.body.appendChild(floatingPanel);
+  return floatingPanel;
+}
+
+/**
+ * Creates the HTML content for the panel
+ * @returns {string} HTML content as a string
+ */
+function createPanelHTML() {
+  return `
     <div class="panel-header">
       <h3>Where to Buy</h3>
       <button class="close-button">×</button>
@@ -11,11 +35,34 @@ function createPanel() {
       <div class="loading">Loading...</div>
     </div>
   `;
-  document.body.appendChild(floatingPanel);
+}
 
-  // Add styles
+/**
+ * Creates and adds the CSS styles to the document
+ */
+function addStylesToDocument() {
   const styles = document.createElement("style");
-  styles.textContent = `
+  styles.textContent = getPanelStyles();
+  document.head.appendChild(styles);
+}
+
+/**
+ * Sets up the close button click handler
+ * @param {HTMLElement} panelElement - The panel DOM element
+ */
+function setupCloseButton(panelElement) {
+  const closeButton = panelElement.querySelector(".close-button");
+  closeButton.addEventListener("click", () => {
+    panelElement.style.display = "none";
+  });
+}
+
+/**
+ * Contains all CSS styles for the panel
+ * @returns {string} CSS styles as a string
+ */
+function getPanelStyles() {
+  return `
     #goodreads-where-to-buy-panel {
       position: fixed;
       top: 20px;
@@ -144,15 +191,6 @@ function createPanel() {
       color: #333;
     }
   `;
-  document.head.appendChild(styles);
-
-  // Add close button functionality
-  const closeButton = floatingPanel.querySelector(".close-button");
-  closeButton.addEventListener("click", () => {
-    floatingPanel.style.display = "none";
-  });
-
-  return floatingPanel;
 }
 
 // Make the function available globally for the extension
