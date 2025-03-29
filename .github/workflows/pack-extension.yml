@@ -9,6 +9,13 @@ on:
   # Allow manual trigger from the Actions tab
   workflow_dispatch:
 
+# Add permissions for GitHub token
+permissions:
+  contents: read
+  packages: read
+  # This is used to upload artifacts
+  actions: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -28,7 +35,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
 
       - name: Set up private key from secrets
         run: |
@@ -48,10 +54,26 @@ jobs:
         run: |
           mkdir -p dist
           VERSION=$(grep -o '"version": "[^"]*"' manifest.json | cut -d'"' -f4)
+          echo "Current directory contents:"
+          ls -la
+          echo "Packaging extension..."
           crx pack . --zip-output "dist/goodreads-where-to-buy-${VERSION}.zip" \
                     --private-key keys/private.pem \
                     --output "dist/goodreads-where-to-buy-${VERSION}.crx"
+          echo "Dist directory contents:"
+          ls -la dist/
           echo "Extension version: $VERSION"
+
+      # Alternative packaging method if crx fails
+      - name: Alternative packaging if crx fails
+        if: ${{ failure() }}
+        run: |
+          echo "Using alternative packaging method..."
+          mkdir -p dist
+          VERSION=$(grep -o '"version": "[^"]*"' manifest.json | cut -d'"' -f4)
+          zip -r "dist/goodreads-where-to-buy-${VERSION}.zip" . -x "node_modules/*" -x "dist/*" -x ".git/*" -x "keys/*"
+          echo "Dist directory contents after alternative method:"
+          ls -la dist/
 
       - name: Upload CRX artifact
         uses: actions/upload-artifact@v4
@@ -59,6 +81,7 @@ jobs:
           name: crx-file
           path: dist/*.crx
           retention-days: 7
+          if-no-files-found: warn
 
       - name: Upload ZIP artifact
         uses: actions/upload-artifact@v4
@@ -66,6 +89,7 @@ jobs:
           name: zip-file
           path: dist/*.zip
           retention-days: 7
+          if-no-files-found: warn
 
       # Optional: Create a release when tag is pushed
       - name: Create Release

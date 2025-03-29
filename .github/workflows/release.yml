@@ -5,6 +5,10 @@ on:
     tags:
       - "v*" # Push events to tags matching v*, i.e. v1.0, v20.15.10
 
+# Add permissions for GitHub token
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -35,6 +39,7 @@ jobs:
             openssl genrsa -out keys/private.pem 2048
           fi
           chmod 600 keys/private.pem
+          ls -la keys/
 
       - name: Install crx globally
         run: npm install -g crx
@@ -57,9 +62,24 @@ jobs:
       - name: Package extension
         run: |
           mkdir -p dist
+          echo "Current directory contents:"
+          ls -la
+          echo "Packaging extension..."
           crx pack . --zip-output "dist/goodreads-where-to-buy-${{ env.VERSION }}.zip" \
                     --private-key keys/private.pem \
                     --output "dist/goodreads-where-to-buy-${{ env.VERSION }}.crx"
+          echo "Dist directory contents:"
+          ls -la dist/
+
+      # Alternative packaging method if crx fails
+      - name: Alternative packaging if crx fails
+        if: ${{ failure() }}
+        run: |
+          echo "Using alternative packaging method..."
+          mkdir -p dist
+          zip -r "dist/goodreads-where-to-buy-${{ env.VERSION }}.zip" . -x "node_modules/*" -x "dist/*" -x ".git/*" -x "keys/*"
+          echo "Dist directory contents after alternative method:"
+          ls -la dist/
 
       - name: Create Release
         uses: softprops/action-gh-release@v1

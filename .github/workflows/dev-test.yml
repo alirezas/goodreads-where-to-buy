@@ -9,6 +9,13 @@ on:
   # Allow manual trigger from the Actions tab
   workflow_dispatch:
 
+# Add permissions for GitHub token
+permissions:
+  contents: read
+  packages: read
+  # This is used to upload artifacts
+  actions: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -28,12 +35,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
 
       - name: Generate test private key
         run: |
           mkdir -p keys
           openssl genrsa -out keys/private.pem 2048
+          chmod 600 keys/private.pem
 
       - name: Install crx globally
         run: npm install -g crx
@@ -43,10 +50,27 @@ jobs:
           mkdir -p dist
           VERSION=$(grep -o '"version": "[^"]*"' manifest.json | cut -d'"' -f4)
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          echo "Current directory contents:"
+          ls -la
+          echo "Packaging extension..."
           crx pack . --zip-output "dist/goodreads-where-to-buy-${VERSION}-dev-${TIMESTAMP}.zip" \
                     --private-key keys/private.pem \
                     --output "dist/goodreads-where-to-buy-${VERSION}-dev-${TIMESTAMP}.crx"
+          echo "Dist directory contents:"
+          ls -la dist/
           echo "Extension version: ${VERSION}-dev-${TIMESTAMP}"
+
+      # Alternative packaging method if crx fails
+      - name: Alternative packaging if crx fails
+        if: ${{ failure() }}
+        run: |
+          echo "Using alternative packaging method..."
+          mkdir -p dist
+          VERSION=$(grep -o '"version": "[^"]*"' manifest.json | cut -d'"' -f4)
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          zip -r "dist/goodreads-where-to-buy-${VERSION}-dev-${TIMESTAMP}.zip" . -x "node_modules/*" -x "dist/*" -x ".git/*" -x "keys/*"
+          echo "Dist directory contents after alternative method:"
+          ls -la dist/
 
       - name: Upload dev artifacts
         uses: actions/upload-artifact@v4
@@ -54,3 +78,4 @@ jobs:
           name: dev-build
           path: dist/*
           retention-days: 3
+          if-no-files-found: warn
