@@ -18,7 +18,7 @@ function initializeBookSearch() {
     showLoadingState(panelContent);
     searchBookAndDisplayResults(bookName, panelContent);
   } else {
-    showErrorMessage(panelContent, "No book information found on this page");
+    showErrorMessage(panelContent, "اطلاعات کتاب در این صفحه یافت نشد");
   }
 }
 
@@ -46,7 +46,8 @@ function extractBookData() {
  * @param {HTMLElement} panelContent - The panel content element
  */
 function showLoadingState(panelContent) {
-  panelContent.innerHTML = '<div class="loading">Searching for books...</div>';
+  panelContent.innerHTML =
+    '<div class="loading">در حال جستجوی کتاب‌ها...</div>';
 }
 
 /**
@@ -70,7 +71,7 @@ function searchBookAndDisplayResults(bookName, panelContent) {
     })
     .catch((error) => {
       console.error("Error searching Iranketab:", error);
-      showErrorMessage(panelContent, `Error searching: ${error.message}`);
+      showErrorMessage(panelContent, `خطا در جستجو: ${error.message}`);
     });
 }
 
@@ -82,7 +83,7 @@ function searchBookAndDisplayResults(bookName, panelContent) {
  */
 function displaySearchResults(results, panelContent, bookName) {
   if (results.length === 0) {
-    panelContent.innerHTML = `<div class="no-results">No results found for "${bookName}"</div>`;
+    panelContent.innerHTML = `<div class="no-results">هیچ نتیجه‌ای برای "${bookName}" یافت نشد</div>`;
     return;
   }
 
@@ -104,9 +105,8 @@ function displaySearchResults(results, panelContent, bookName) {
  * @returns {string} HTML string for the header
  */
 function createResultsHeaderHtml(results, bookName) {
-  return `<h4>Found ${results.length} result${
-    results.length > 1 ? "s" : ""
-  } for "${bookName}":</h4>`;
+  const resultText = results.length > 1 ? "نتیجه" : "نتیجه";
+  return `<h4>${results.length} ${resultText} برای "${bookName}" یافت شد:</h4>`;
 }
 
 /**
@@ -126,7 +126,7 @@ function createBookItemHtml(result) {
         <div class="book-details">
           <div class="book-title">${result.title}</div>
           <div class="book-price">${result.price}</div>
-          <a href="${result.url}" target="_blank" class="book-link">View on Iranketab</a>
+          <a href="${result.url}" target="_blank" class="book-link">مشاهده در ایران‌کتاب</a>
         </div>
       </div>
     </li>

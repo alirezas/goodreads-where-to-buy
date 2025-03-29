@@ -28,11 +28,11 @@ function createPanelElement() {
 function createPanelHTML() {
   return `
     <div class="panel-header">
-      <h3>Where to Buy</h3>
+      <h3>کجا بخریم</h3>
       <button class="close-button">×</button>
     </div>
     <div class="panel-content">
-      <div class="loading">Loading...</div>
+      <div class="loading">در حال بارگذاری...</div>
     </div>
   `;
 }
@@ -66,13 +66,14 @@ function getPanelStyles() {
     #goodreads-where-to-buy-panel {
       position: fixed;
       top: 20px;
-      right: 20px;
+      left: 20px;
       width: 320px;
       background: white;
       border-radius: 8px;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
       z-index: 9999;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: Tahoma, Arial, sans-serif;
+      direction: rtl;
     }
 
     .panel-header {
@@ -142,6 +143,7 @@ function getPanelStyles() {
 
     .book-content {
       display: flex;
+      flex-direction: row-reverse;
       gap: 12px;
     }
 
@@ -155,6 +157,7 @@ function getPanelStyles() {
 
     .book-details {
       flex: 1;
+      text-align: right;
     }
 
     .book-title {
@@ -189,6 +192,7 @@ function getPanelStyles() {
       margin-bottom: 12px;
       font-size: 14px;
       color: #333;
+      text-align: right;
     }
   `;
 }
