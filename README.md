@@ -11,6 +11,23 @@ A Chrome extension that enhances your Goodreads experience by showing where you 
 
 ## Installation
 
+### Method 1: Download from GitHub Releases (Recommended)
+
+1. Go to the [Releases](https://github.com/alirezas/goodreads-where-to-buy/releases) page
+2. Download the latest `.crx` file from the most recent release
+3. Open Chrome and navigate to `chrome://extensions/`
+4. Enable "Developer mode" in the top right corner
+5. Drag and drop the downloaded `.crx` file onto the Chrome Extensions page
+6. Click "Add extension" when prompted
+
+If you encounter any issues with the `.crx` file installation, try the `.zip` method:
+
+1. Download the latest `.zip` file from the Releases page
+2. Extract the zip file to a folder on your computer
+3. Follow the steps below for "Manual Installation"
+
+### Method 2: Manual Installation
+
 1. Clone this repository or download the source code
 2. Open Chrome and navigate to `chrome://extensions/`
 3. Enable "Developer mode" in the top right corner
